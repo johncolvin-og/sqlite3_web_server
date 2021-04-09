@@ -1,0 +1,36 @@
+{
+  "name": "sqlite3_web_server",
+  "version": "1.0.0",
+  "description": "Simple web server that provides readonly access to a sqlite3 database",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "argparse": "^2.0.1",
+    "collections": "^5.1.12",
+    "express": "^4.17.1",
+    "jquery": "^3.6.0",
+    "sqlite3": "^5.0.2"
+  },
+  "devDependencies": {
+    "prettier": "2.2.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johncolvin-og/sqlite3_web_server.git"
+  },
+  "keywords": [
+    "sqlite",
+    "sqlite3",
+    "remote",
+    "server"
+  ],
+  "author": "John Colvin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/johncolvin-og/sqlite3_web_server/issues"
+  },
+  "homepage": "https://github.com/johncolvin-og/sqlite3_web_server#readme"
+}
