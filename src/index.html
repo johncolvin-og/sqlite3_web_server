@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sqlite3 Viewer</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="scripts/jquery-3.5.1.min.js"></script>
+    <script>
+    const query_history_key = "query_history";
+    const query_param = 'sql_query';
+
+    function get_query_from_url() {
+      let query = decodeURIComponent(
+        new URL(document.location)
+        .searchParams
+        .get('sql_query'));
+      // for some reason I cannot fathom, `searchParams.get` returns a literal
+      // string "null" (rather than actual null) if there isn't an entry for
+      // sql_query in searchParams
+      return query == "null" ? null : query;
+    }
+
+    function get_query_from_input() {
+      return document.getElementById('sql_query_text').value;
+    }
+
+    function set_query_input(value) {
+      document.getElementById('sql_query_text').value = value;
+    }
+
+    function run_sql_query(query_text = get_query_from_url()) {
+      if (!query_text) {
+        return;
+      }
+      console.info("query_text type " + typeof(query_text));
+      console.info(`running req ${query_text}`);
+      let req = new XMLHttpRequest();
+      req.open("GET", `${query_param}=${query_text}`);
+      req.onreadystatechange = function () {
+        console.log(`Received sql query results.  XMLHttpResponse readystate:
+          ${this.readyState}, status: ${this.status}, statusText:
+          ${this.statusText}`);
+        document.getElementById("sql_output_table").innerHTML = this.responseText;
+      };
+      req.send();
+    }
+
+    function on_loaded() {
+      let query = get_query_from_url();
+      console.info(`on loaded; query params from url: ${query}`);
+      if (query != undefined) {
+        set_query_input(query);
+        run_sql_query(query);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", on_loaded);
+    </script>
+  </head>
+  <body>
+    <form id="sql_input_panel">
+      <input
+        id="sql_query_text"
+        name="sql_query"
+        placeholder="Enter SQL Query"
+        maxlength="256"
+        rows="1"
+      >
+      <datalist id="autocomplete-dropdown" class="autocomplete-items"></datalist>
+    </input>
+    <input id="execute-query-bn" type="submit" value="Query">
+  </form>
+  <section id="sql_output_panel">
+    <table id="sql_output_table" display="none"></table>
+  </section>
+</body>
+</html>
