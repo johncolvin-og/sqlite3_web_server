@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sqlite3 Viewer</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    function run_sql_query_local() {
+      var query_text = document.getElementById('sql_query_text').value;
+      let xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        console.log("Sql query returned");
+        document.getElementById("sql_output_table").innerHTML = this.responseText;
+      };
+      xhttp.open("GET", `sql_query=${query_text}`);
+      xhttp.send();
+    }
+    function on_loaded() {
+      document.querySelector("#sql_query_text").addEventListener("keydown", event => {
+        if (event.key == "Enter") {
+          event.preventDefault();
+          run_sql_query_local();
+        }
+      });
+      $("#sql_output").css("min-width", $("#sql_input_panel").width());
+    }
+    document.addEventListener("DOMContentLoaded", on_loaded);
+  </script>
+</head>
+
+<body>
+  <div id="sql_input_panel">
+    <input id="sql_query_text" name="sql_query" placeholder="Enter SQL Query" rows=1></input>
+    <button id="execute_query_bn" onclick="run_sql_query_local()">Query</button>
+  </div>
+  <section id="sql_output_panel">
+    <table id="sql_output_table"></table>
+  </section>
+</body>
+
+</html>
