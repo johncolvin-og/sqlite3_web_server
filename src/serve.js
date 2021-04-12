@@ -1,4 +1,8 @@
 const path = require('path');
+var DOMParser = require('xmldom').DOMParser;
+const FileReader = require('filereader');
+const jsdom = require("jsdom");
+const { JSDOM } = jsdom;
 var List = require('collections/list');
 const {ArgumentParser} = require('argparse');
 const querystring = require('querystring');
@@ -40,6 +44,15 @@ function get_database(database_arg) {
   return database_arg == undefined ? get_default_database() : database_arg;
 }
 
+function file_to_string(file, callback) {
+  var reader = new FileReader();
+  reader.onload = function(event) {
+    console.log('File content:', event.target.result);
+    callback(event);
+  };
+  reader.readAsText(file);
+}
+
 function sql_header_row_to_html(column_names) {
   html = '<TR class=\"sql_header_row\">\n';
   for (cn in column_names) {
@@ -59,6 +72,9 @@ function sql_row_to_html(row) {
 }
 
 function run_sql_query(query, req, res) {
+  // const parser = new DOMParser();
+  // const dom_parser = new JSDOM().window.DOMParser;
+  var rows_html = "";
   // state
   let row_count = 0;
   let column_names = new List();
@@ -69,9 +85,11 @@ function run_sql_query(query, req, res) {
         for (cn in Object.keys(row)) {
           column_names.push(cn);
         }
-        res.write(sql_header_row_to_html(row));
+        // res.write(sql_header_row_to_html(row));
+        rows_html += sql_header_row_to_html(row);
       }
-      res.write(sql_row_to_html(row));
+      // res.write(sql_row_to_html(row));
+      rows_html += sql_row_to_html(row);
       row_count += 1;
     }
   };
@@ -85,6 +103,28 @@ function run_sql_query(query, req, res) {
                 but 'count' in the sqlite callback is ${count}`);
     }
     console.log(`Finished executing sql query (produced ${count} rows)`);
+    function on_html(event) {
+      let docpriority_queue = parser.parseFromString(event.target.result);
+      doc.getElementById('sql_output_table').innerHTML = rows_html;
+    }
+    let html = fs.readFileSync(`${__dirname}/index.html`);
+    console.info(`Here's the html\n:${html}`);
+    var domBuilder = function(data) {
+      console.info("hey");
+    };
+    var dom_par = new DOMParser({
+      // locator: {},
+      errorHandler: {warning:function(w){console.warn(w)}, error:function(e){console.error(e);}, fatalError:function(e){console.error(e);}}
+      // domBuilder: domBuilder
+    });
+    let html_str = html.toString();
+    let doc = dom_par.parseFromString(html_str, 'text/html');
+    // let deo = Document();
+    // let doc = dom_parser.parseFromString(html, undefined);
+    doc.getElementById('sql_output_table').innerHTML = rows_html;
+    res.write(doc.all[0]);
+    // res.write(doc.documentElement.innerHTML);
+    // file_to_string('./index.html', on_html);
     res.end();
   };
 
@@ -148,7 +188,24 @@ app.get(`/sql_query=*`, function(req, res) {
   let sql_query = querystring.parse(req.url.substr(1))['sql_query'];
   console.log(`Executing sql query: ${sql_query}`);
   res.writeHead(200, {'Content-type': 'text/html'});
-  run_sql_query(sql_query, req, res);
+  // run_sql_query(sql_query, req, res);
+  var dom_par = new DOMParser({
+    // locator: {},
+    errorHandler: {warning:function(w){console.warn(w)}, error:function(e){console.error(e);}, fatalError:function(e){console.error(e);}}
+    // domBuilder: domBuilder
+  });
+  let html_from_file = fs.readFileSync(`${__dirname}/index.html`);
+  let html_str = html_from_file.toString();
+  let doc = dom_par.parseFromString(html_str, 'text/html');
+
+  var el = doc.getElementById("entry-template");
+  var source = el.innerHTML;
+  // var source = doc.getElementById("entry-template").innerHTML;
+  var template = Handlebars.compile(source);
+  var context = { sql_rows: "dipsy"};
+  var html = template(context);
+  res.write(html);
+  res.end();
 });
 
 app.get('/*', function(req, res) {
