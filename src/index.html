@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sqlite3 Viewer</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-  <script src="autocomplete.js"></script>
-  <script src="CookieReader.js"></script>
-  <script src="CookieWriter.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
-  <script>
-    var query_history = [];
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sqlite3 Viewer</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="autocomplete.js"></script>
+    <script src="CookieReader.js"></script>
+    <script src="CookieWriter.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+    <script>
     const query_history_key = "query_history";
+    const query_param = 'sql_query';
+    
     function on_query_click() {
       let query_text = document.getElementById('sql_query_text').value;
       let url = new URL(document.location);
@@ -24,24 +24,22 @@
     }
 
     function run_sql_query(query_text) {
+      if (!query_text) {
+        return;
+      }
       let req = new XMLHttpRequest();
-      req.open("GET", `sql_query=${query_text}`);
+      req.open("GET", `${query_param}=${query_text}`);
       req.onreadystatechange = function () {
-        console.log("received query results");
-        document.getElementById("sql_output_table").innerHTML = req.responseText;
+        console.log(`Received sql query results.  XMLHttpResponse readystate:
+          ${this.readyState}, status: ${this.status}, statusText:
+          ${this.statusText}`);
+        document.getElementById("sql_output_table").innerHTML = this.responseText;
       };
-      console.info("Echo cookie: " + document.cookie);
-      let queries_cookie = CookieReader.read(document.cookie, "sql_queries");
-      console.info("Queries cookie: " + queries_cookie);
       req.send();
     }
 
-    function on_loaded() {
-      console.info("query history length: " + query_history.length);
-      let url = window.location.search;
-      let query_history_str = localStorage.getItem(query_history_key);
-      let count = 0;
-      let id = 0;
+    function read_query_history_from_storage(query_history_str) {
+      let query_history = [];
       if (query_history_str != null) {
         for (let query of query_history_str.split(';')) {
           if (query && query != "null" && !(query_history.includes(query))) {
@@ -50,52 +48,59 @@
           }
         }
       }
-      console.info("query history length: " + query_history.length);
-      var bobloblaw = new AutoComplete(document, document.getElementById('sql_query_text'), query_history);
-      let sql_query = decodeURIComponent(new URL(document.location).searchParams.get('sql_query'));
+      return query_history;
+    }
+
+    function get_url_query_param() {
+      return decodeURIComponent(
+        new URL(document.location)
+        .searchParams
+        .get('sql_query'));
+    }
+
+    function on_loaded() {
+      let query_history_str = localStorage.getItem(query_history_key);
+      let query_history = read_query_history_from_storage(query_history_str);
+      let sql_query = get_url_query_param();
       if (sql_query != undefined) {
         document.getElementById('sql_query_text').value = sql_query;
-        if (!(sql_query in query_history)) {
-          // query_history.push(sql_query);
+        if (!query_history.includes(sql_query)) {
           query_history_str += ';' + sql_query;
           localStorage.setItem(query_history_key, query_history_str);
         }
         run_sql_query(sql_query);
       }
-      // document.window.addEventListener("keydown", event => {
-      //   console.log("Event key str (win): " + event.key);
-      // });
-      $("input").keydown(function (e) {
-        console.log("Event key str (win): " + event.key);
-        if (e.which === 27) alert('escape pressed');
-      });
       document.querySelector("#sql_query_text").addEventListener("keydown", event => {
-        console.log("Event key str: " + event.key);
-        if (event.key == "Escape") {
-          bobloblaw.closeAllLists();
-        }
         if (event.key == "Enter") {
           event.preventDefault();
-          on_query_click();
+          // if (!autocomplete.any_active()) {
+            on_query_click();
+          // }
         }
       });
     }
 
-    query_history = [];
-    console.info("query history is empty: " + query_history.length);
+    // console.info("query history num entries: " + query_history.length);
     document.addEventListener("DOMContentLoaded", on_loaded);
-  </script>
-</head>
-
-<body>
-  <div id="sql_input_panel">
-    <input id="sql_query_text" name="sql_query" placeholder="Enter SQL Query" rows=1 autocomplete="off"></input>
-    <div id="autocomplete-dropdown" class="autocomplete-items"></div>
-    <button id="execute_query_bn" onclick="on_query_click()">Query</button>
-  </div>
+    </script>
+  </head>
+  <body>
+    <form id="sql_input_panel">
+      <input
+        id="sql_query_text"
+        name="sql_query"
+        list="autocomplete-dropdown"
+        placeholder="Enter SQL Query"
+        maxlength="256"
+        rows="1"
+      >
+      <datalist id="autocomplete-dropdown" class="autocomplete-items"></datalist>
+    </input>
+    <input type="submit">
+    <!-- <button id="execute_query_bn" onclick="on_query_click()">Query</button> -->
+  </form>
   <section id="sql_output_panel">
-    <table id="sql_output_table"></table>
+    <table id="sql_output_table" display="none"></table>
   </section>
 </body>
-
 </html>

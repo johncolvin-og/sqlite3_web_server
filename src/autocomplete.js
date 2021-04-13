@@ -13,7 +13,7 @@ class AutoComplete {
   closeAllLists(elmnt) {
     /*close all autocomplete lists in the document,
     except the one passed as an argument:*/
-    var x = document.getElementsByClassName('autocomplete-items');
+    var x = this.document.getElementsByClassName('autocomplete-items');
     for (var i = 0; i < x.length; i++) {
       if (elmnt != x[i] && elmnt != this.input) {
         x[i].innerHTML = '';
@@ -59,7 +59,7 @@ class AutoComplete {
         if (options[i].substr(0, val.length).toUpperCase() ==
             val.toUpperCase()) {
           /*create a DIV element for each matching element:*/
-          let opt = document.createElement('div');
+          let opt = document.createElement('option');
           /*make the matching letters bold:*/
           opt.innerHTML =
               '<strong>' + options[i].substr(0, val.length) + '</strong>';
@@ -68,14 +68,9 @@ class AutoComplete {
            * value:*/
           opt.innerHTML +=
               '<input type=\'hidden\' value=\'' + options[i] + '\'>';
-          /*execute a function when someone clicks on the item value (DIV
-           * element):*/
+          // Copy item-value to input when item is click
           opt.addEventListener('click', function(e) {
-            /*insert the value for the autocomplete text field:*/
             input.value = opt.getElementsByTagName('input')[0].value;
-            /*close the list of autocompleted values,
-            (or any other open lists of autocompleted values:*/
-            self.closeAllLists();
           });
           dropdown.appendChild(opt);
         }
@@ -85,7 +80,7 @@ class AutoComplete {
     input.addEventListener('keydown', function(e) {
       let x = document.getElementById('autocomplete-dropdown');
       console.info('on key down: ' + e.keyCode);
-      if (x) x = x.getElementsByTagName('div');
+      if (x) x = x.getElementsByTagName('option');
       function move_up() {
         currentFocus--;
         addActive(x);
@@ -146,5 +141,10 @@ class AutoComplete {
     document.addEventListener('click', function(e) {
       self.closeAllLists(e.target);
     });
+  }
+  
+  any_active() {
+    let active_items = this.document.getElementsByClassName('autocomplete-active');
+    return active_items.length > 0;
   }
 }
