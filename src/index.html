@@ -10,6 +10,7 @@
     <script src="autocomplete.js"></script>
     <script src="CookieReader.js"></script>
     <script src="CookieWriter.js"></script>
+    <script src="QueryHistory.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
     <script>
     const query_history_key = "query_history";
@@ -60,22 +61,25 @@
 
     function on_loaded() {
       let query_history_str = localStorage.getItem(query_history_key);
+      localStorage.setItem(query_history_key, "");
       let query_history = read_query_history_from_storage(query_history_str);
       let sql_query = get_url_query_param();
       if (sql_query != undefined) {
         document.getElementById('sql_query_text').value = sql_query;
         if (!query_history.includes(sql_query)) {
+          query_history.push(sql_query);
           query_history_str += ';' + sql_query;
           localStorage.setItem(query_history_key, query_history_str);
         }
         run_sql_query(sql_query);
       }
+      let autocomplete = new AutoComplete(document, document.getElementById("sql_query_text"), query_history);
       document.querySelector("#sql_query_text").addEventListener("keydown", event => {
         if (event.key == "Enter") {
           event.preventDefault();
-          // if (!autocomplete.any_active()) {
+          if (!autocomplete.any_active()) {
             on_query_click();
-          // }
+          }
         }
       });
     }
@@ -85,20 +89,20 @@
     </script>
   </head>
   <body>
-    <form id="sql_input_panel">
+    <div id="sql_input_panel">
       <input
         id="sql_query_text"
         name="sql_query"
-        list="autocomplete-dropdown"
         placeholder="Enter SQL Query"
         maxlength="256"
         rows="1"
+        autocomplete="off"
       >
       <datalist id="autocomplete-dropdown" class="autocomplete-items"></datalist>
     </input>
     <input type="submit">
     <!-- <button id="execute_query_bn" onclick="on_query_click()">Query</button> -->
-  </form>
+  </div>
   <section id="sql_output_panel">
     <table id="sql_output_table" display="none"></table>
   </section>
