@@ -7,28 +7,9 @@
     <title>Sqlite3 Viewer</title>
     <link rel="stylesheet" href="style.css">
     <script src="scripts/jquery-3.5.1.min.js"></script>
-    <script src="scripts/handlebars.js"></script>
-    <script src="autocomplete.js"></script>
-    <script src="QueryHistory.js"></script>
     <script>
     const query_history_key = "query_history";
     const query_param = 'sql_query';
-    
-    function delete_option(x) {
-
-    }
-    
-    function on_hover(bn) {
-      bn.setAttribute('src', '/icons/times-circle-solid-hover.svg');  
-    }
-    
-    function on_query_click() {
-      let query_text = document.getElementById('sql_query_text').value;
-      let url = new URL(document.location);
-      url.searchParams = new URLSearchParams();
-      url.searchParams.set('sql_query', query_text);
-      window.location.href = url;
-    }
 
     function run_sql_query(query_text) {
       if (!query_text) {
@@ -53,30 +34,11 @@
     }
 
     function on_loaded() {
-      let query_history_store = new QueryHistory(localStorage);
       let query = get_url_query_param();
       if (query != undefined) {
-        query_history_store.add(query);
         document.getElementById('sql_query_text').value = query;
         run_sql_query(query);
       }
-      // let autocomplete;
-      function delete_option(option_view) {
-        console.info("deleting bling");
-        // autocomplete.delete_option(option);
-      }
-      // <image class=\"round-close-button\" src=\"/icons/times-circle-solid.svg\" onhover=\"on_hover(this)\"></image>\
-      var option_view_template = Handlebars.compile("\
-        <option>\
-          <button onclick=\"delete_option(this)\">X</button>\
-          <strong>{{match_head}}</strong>{{tail}}\
-          <input type=\'hidden\' value=\'{{value}}\'>\
-        </option>");
-      var autocomplete = new AutoComplete(
-        document,
-        document.getElementById("sql_query_text"),
-        query_history_store.entries,
-        option_view_template);
       document.querySelector("#sql_query_text")
         .addEventListener("keydown", event => {
           if (event.key == "Enter") {
