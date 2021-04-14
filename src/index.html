@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sqlite3 Viewer</title>
     <link rel="stylesheet" href="style.css">
@@ -11,10 +10,26 @@
     const query_history_key = "query_history";
     const query_param = 'sql_query';
 
-    function run_sql_query(query_text) {
+    function get_query_from_url() {
+      return decodeURIComponent(
+        new URL(document.location)
+        .searchParams
+        .get('sql_query'));
+    }
+
+    function get_query_from_input() {
+      return document.getElementById('sql_query_text').value;
+    }
+
+    function set_query_input(value) {
+      document.getElementById('sql_query_text').value = value;
+    }
+
+    function run_sql_query(query_text = get_query_from_url()) {
       if (!query_text) {
         return;
       }
+      console.info(`running req ${query_text}`);
       let req = new XMLHttpRequest();
       req.open("GET", `${query_param}=${query_text}`);
       req.onreadystatechange = function () {
@@ -26,49 +41,31 @@
       req.send();
     }
 
-    function get_url_query_param() {
-      return decodeURIComponent(
-        new URL(document.location)
-        .searchParams
-        .get('sql_query'));
-    }
-
     function on_loaded() {
-      let query = get_url_query_param();
+      let query = get_query_from_url();
+      console.info(`on loaded; query params from url: ${query}`);
       if (query != undefined) {
-        document.getElementById('sql_query_text').value = query;
+        set_query_input(query);
         run_sql_query(query);
       }
-      document.querySelector("#sql_query_text")
-        .addEventListener("keydown", event => {
-          if (event.key == "Enter") {
-            event.preventDefault();
-            if (!autocomplete.any_active()) {
-              on_query_click();
-            }
-          }
-      });
     }
 
-    // console.info("query history num entries: " + query_history.length);
     document.addEventListener("DOMContentLoaded", on_loaded);
     </script>
   </head>
   <body>
-    <div id="sql_input_panel">
+    <form id="sql_input_panel">
       <input
         id="sql_query_text"
         name="sql_query"
         placeholder="Enter SQL Query"
         maxlength="256"
         rows="1"
-        autocomplete="off"
       >
       <datalist id="autocomplete-dropdown" class="autocomplete-items"></datalist>
     </input>
-    <input type="submit">
-    <!-- <button id="execute_query_bn" onclick="on_query_click()">Query</button> -->
-  </div>
+    <input id="execute-query-bn" type="submit" value="Query">
+  </form>
   <section id="sql_output_panel">
     <table id="sql_output_table" display="none"></table>
   </section>
