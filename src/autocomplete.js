@@ -1,16 +1,27 @@
+function on_hover(bn) {
+  console.info("gay");
+  bn.setAttribute('src', '/icons/times-circle-solid-hover.svg');
+}
+
 class AutoComplete {
-  constructor(document, input, options) {
+  constructor(document, input, options, option_view_factory) {
     this.document = document;
     this.input = input;
     this.options = options;
-    this.init(); 
+    this.currentFocus = -1;
+    this.deleting = false;
+    this.option_view_factory = option_view_factory;
+    this.dropdown = document.getElementById('autocomplete-dropdown');
+    this.input.addEventListener('input', this.on_text_changed);
+    this.input.addEventListener('keydown', this.on_key_down);
+    this.document.addEventListener('click', this.on_click);
   }
 
   is_shift_down() {
     return window.event && !!window.event.shiftKey;
   }
 
-  closeAllLists(elmnt) {
+  close_dropdown = (elmnt) => {
     /*close all autocomplete lists in the document,
     except the one passed as an argument:*/
     var x = this.document.getElementsByClassName('autocomplete-items');
@@ -19,132 +30,138 @@ class AutoComplete {
         x[i].innerHTML = '';
       }
     }
+  };
+
+  delete_option = (option_view) => {
+    console.info("deleting bling");
+    this.deleting = true;
+    this.options.remove(option_view.parentNode.value);
+    this.on_text_changed();
+  };
+
+  on_option_click = (event) => {
+    if (this.deleting) {
+      this.deleting = false;
+      return;
+    }
+    let option_in = event.target.getElementsByTagName('input')[0];
+    if (option_in) {
+      this.input.value = event.target.getElementsByTagName('input')[0].value;
+    } else {
+      this.delete_option(event.target);
+    }
+  };
+
+  is_option_match = (option, value = this.input.value) => {
+    let opt_upper = option.toUpperCase();
+    let val_upper = value.toUpperCase();
+    return opt_upper.indexOf(val_upper) >= 0;
+  };
+
+  static createElementFromHTML(htmlString) {
+    var div = document.createElement('div');
+    div.innerHTML = htmlString.trim();
+
+    // Change this to div.childNodes to support multiple top-level nodes
+    return div.firstChild;
   }
 
-  init() {
-    // document.window.keydown(function(e) {
-    //   // ESCAPE key pressed
-    //   if (e.keyCode == 27) {
-    //     closeAllLists();
-    //   }
-    // });
-    let options = this.options;
-    let input = this.input;
-    let document = this.document;
+  on_text_changed = () => {
+    this.close_dropdown();
+    if (!this.input.value) {
+      return;
+    }
+    console.info(`ON INPUT: ${this.input.value}`);
+    this.currentFocus = -1;
+    this.dropdown.innerHTML = '';
+    console.info('Appending child to pnode');
     let self = this;
-    console.info('We have options: ' + options.length);
-    console.info(`Entering autocomplete: ${options}`);
-    var currentFocus;
-    /*execute a function when someone writes in the text field:*/
-    input.addEventListener('input', function(e) {
-      var val = this.value;
-      /*close any already open lists of autocompleted values*/
-      self.closeAllLists();
-      if (!val) {
-        console.info(`No input: ${val}`);
-        return false;
+    for (let opt of this.options) {
+      console.info(`process autocomp opt: ${opt}`);
+      if (!this.is_option_match(opt)) {
+        continue;
       }
-      console.info(`ON INPUT: ${val}`);
-      currentFocus = -1;
-      var dropdown = document.getElementById('autocomplete-dropdown');
-      dropdown.innerHTML = '';
-      /*append the DIV element as a child of the autocomplete container:*/
-      console.info('Appending child to pnode');
-      // this.parentNode.appendChild(a);
-      /*for each item in the array...*/
-      for (let i = 0; i < options.length; i++) {
-        /*check if the item starts with the same letters as the text field
-         * value:*/
-        console.info(`process autocomp opt: ${options[i]}`);
-        if (options[i].substr(0, val.length).toUpperCase() ==
-            val.toUpperCase()) {
-          /*create a DIV element for each matching element:*/
-          let opt = document.createElement('option');
-          /*make the matching letters bold:*/
-          opt.innerHTML =
-              '<strong>' + options[i].substr(0, val.length) + '</strong>';
-          opt.innerHTML += options[i].substr(val.length);
-          /*insert a input field that will hold the current array item's
-           * value:*/
-          opt.innerHTML +=
-              '<input type=\'hidden\' value=\'' + options[i] + '\'>';
-          // Copy item-value to input when item is click
-          opt.addEventListener('click', function(e) {
-            input.value = opt.getElementsByTagName('input')[0].value;
-          });
-          dropdown.appendChild(opt);
+      if (opt.substr(0, this.input.value.length).toUpperCase() ==
+        this.input.value.toUpperCase()) {
+        let opt_view_html = this.option_view_factory({
+          'match_head': opt.substr(0, this.input.value.length),
+          'tail': opt.substr(this.input.value.length),
+          'value': opt
+        });
+        let opt_view = AutoComplete.createElementFromHTML(opt_view_html);
+        opt_view.addEventListener('click', this.on_option_click);
+        this.dropdown.appendChild(opt_view);
+      }
+    }
+  };
+
+  on_key_down = (e) => {
+    console.info('on key down: ' + e.keyCode);
+    switch (e.keyCode) {
+      case KeyEvent.DOM_VK_ESC:
+        break;
+      case 27:
+        console.info('On esc key press');
+        e.preventDefault();
+        this.close_dropdown();
+        break;
+      case KeyEvent.DOM_VK_TAB:
+        e.preventDefault();
+        if (is_shift_down()) {
+          this.move_up();
+        } else {
+          this.move_down();
         }
-      }
-    });
-    /*execute a function presses a key on the keyboard:*/
-    input.addEventListener('keydown', function(e) {
-      let x = document.getElementById('autocomplete-dropdown');
-      console.info('on key down: ' + e.keyCode);
-      if (x) x = x.getElementsByTagName('option');
-      function move_up() {
-        currentFocus--;
-        addActive(x);
-      }
-      function move_down() {
-        currentFocus++;
-        addActive(x);
-      }
-      switch (e.keyCode) {
-        case KeyEvent.DOM_VK_ESC:
-          break;
-        case 27:
-          console.info('On esc key press');
-          e.preventDefault();
-          self.closeAllLists();
-          break;
-        case KeyEvent.DOM_VK_TAB:
-          e.preventDefault();
-          if (is_shift_down()) {
-            move_up();
-          } else {
-            move_down();
-          }
-          break;
-        case KeyEvent.DOM_VK_DOWN:
-          move_down();
-          break;
-        case KeyEvent.DOM_VK_UP:
-          move_up();
-          break;
-        case KeyEvent.DOM_VK_RETURN:
-          // Prevent submission of query req to server
-          e.preventDefault();
-          if (currentFocus > -1 && x) {
-            // Let click handler update input text w/ the selected option
-            x[currentFocus].click();
-          }
-          break;
-      }
-    });
-    function addActive(x) {
-      /*a function to classify an item as "active":*/
-      if (!x) return false;
-      /*start by removing the "active" class on all items:*/
-      removeActive(x);
-      if (currentFocus >= x.length) currentFocus = 0;
-      if (currentFocus < 0) currentFocus = (x.length - 1);
-      /*add class "autocomplete-active":*/
-      x[currentFocus].classList.add('autocomplete-active');
+        break;
+      case KeyEvent.DOM_VK_DOWN:
+        this.move_down();
+        break;
+      case KeyEvent.DOM_VK_UP:
+        this.move_up();
+        break;
+      case KeyEvent.DOM_VK_RETURN:
+        // Prevent submission of query req to server
+        e.preventDefault();
+        if (this.currentFocus > -1 && this.dropdown) {
+          // Let click handler update input text w/ the selected option
+          this.dropdown[this.currentFocus].click();
+        }
+        break;
     }
-    function removeActive(x) {
-      /*a function to remove the "active" class from all autocomplete items:*/
-      for (var i = 0; i < x.length; i++) {
-        x[i].classList.remove('autocomplete-active');
-      }
+  };
+
+  on_click = (e) => {
+    this.close_dropdown();
+  };
+
+  move_up = () => {
+    this.currentFocus--;
+    this.activate_item();
+  };
+
+  move_down = () => {
+    this.currentFocus++;
+    this.activate_item();
+  };
+
+  deactivate_all = () => {
+    for (var i = 0; i < this.dropdown.length; i++) {
+      this.dropdown[i].classList.remove('autocomplete-active');
     }
-    /*execute a function when someone clicks in the document:*/
-    document.addEventListener('click', function(e) {
-      self.closeAllLists(e.target);
-    });
-  }
-  
+  };
+
+  activate_item = () => {
+    deactivate_all();
+    if (self.currentFocus >= this.dropdown.length) {
+      self.currentFocus = 0;
+    } else if (self.currentFocus < 0) {
+      self.currentFocus = this.dropdown.length - 1;
+    }
+    this.dropdown[self.currentFocus].classList.add('autocomplete-active');
+  };
+
   any_active() {
-    let active_items = this.document.getElementsByClassName('autocomplete-active');
-    return active_items.length > 0;
+    return this.document
+      .getElementsByClassName('autocomplete-active').length > 0;
   }
 }

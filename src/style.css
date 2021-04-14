@@ -28,6 +28,63 @@ body {
    background-color: var(--default-background);
 }
 
+.round-close-button {
+   width: 17px;
+   height: 17px;
+   z-index: 99999999;
+}
+
+/* .round-close-button {
+  border-radius: 50%;
+  padding: 0.5em;
+  width: 30px;
+  height: 30px;
+  border: 2px solid blue;
+  color: blue;
+  position: relative;
+}
+
+.round-close-button:hover {
+  border: 2px solid blue;
+  background-color: yellow;
+  color: #ffffff;
+}
+ 
+.round-close-button::before {
+  content: " ";
+  position: absolute;
+  display: block;
+  background-color: blue;
+  width: 2px;
+  left: 12px;
+  top: 5px;
+  bottom: 5px;
+  transform: rotate(45deg);
+}
+
+.round-close-button::after {
+  content: " ";
+  position: absolute;
+  display: block;
+  background-color: blue;
+  height: 2px;
+  top:12px;
+  left: 5px;
+  right: 5px;
+  transform: rotate(45deg);
+}
+
+.round-close-button {
+   top: 2px;
+   width: 18px;
+   height: 18px;
+}
+
+.round-close-button:hover {
+   color: darkred;
+   background-color: green;
+} */
+
 #sql_input_panel {
    padding-top: 2em;
    display: grid;

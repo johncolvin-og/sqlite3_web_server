@@ -6,15 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sqlite3 Viewer</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="scripts/jquery-3.5.1.min.js"></script>
+    <script src="scripts/handlebars.js"></script>
     <script src="autocomplete.js"></script>
-    <script src="CookieReader.js"></script>
-    <script src="CookieWriter.js"></script>
     <script src="QueryHistory.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
     <script>
     const query_history_key = "query_history";
     const query_param = 'sql_query';
+    
+    function delete_option(x) {
+
+    }
+    
+    function on_hover(bn) {
+      bn.setAttribute('src', '/icons/times-circle-solid-hover.svg');  
+    }
     
     function on_query_click() {
       let query_text = document.getElementById('sql_query_text').value;
@@ -39,19 +45,6 @@
       req.send();
     }
 
-    function read_query_history_from_storage(query_history_str) {
-      let query_history = [];
-      if (query_history_str != null) {
-        for (let query of query_history_str.split(';')) {
-          if (query && query != "null" && !(query_history.includes(query))) {
-            console.info("adding query to history: " + query);
-            query_history.push(query);
-          }
-        }
-      }
-      return query_history;
-    }
-
     function get_url_query_param() {
       return decodeURIComponent(
         new URL(document.location)
@@ -60,27 +53,38 @@
     }
 
     function on_loaded() {
-      let query_history_str = localStorage.getItem(query_history_key);
-      localStorage.setItem(query_history_key, "");
-      let query_history = read_query_history_from_storage(query_history_str);
-      let sql_query = get_url_query_param();
-      if (sql_query != undefined) {
-        document.getElementById('sql_query_text').value = sql_query;
-        if (!query_history.includes(sql_query)) {
-          query_history.push(sql_query);
-          query_history_str += ';' + sql_query;
-          localStorage.setItem(query_history_key, query_history_str);
-        }
-        run_sql_query(sql_query);
+      let query_history_store = new QueryHistory(localStorage);
+      let query = get_url_query_param();
+      if (query != undefined) {
+        query_history_store.add(query);
+        document.getElementById('sql_query_text').value = query;
+        run_sql_query(query);
       }
-      let autocomplete = new AutoComplete(document, document.getElementById("sql_query_text"), query_history);
-      document.querySelector("#sql_query_text").addEventListener("keydown", event => {
-        if (event.key == "Enter") {
-          event.preventDefault();
-          if (!autocomplete.any_active()) {
-            on_query_click();
+      // let autocomplete;
+      function delete_option(option_view) {
+        console.info("deleting bling");
+        // autocomplete.delete_option(option);
+      }
+      // <image class=\"round-close-button\" src=\"/icons/times-circle-solid.svg\" onhover=\"on_hover(this)\"></image>\
+      var option_view_template = Handlebars.compile("\
+        <option>\
+          <button onclick=\"delete_option(this)\">X</button>\
+          <strong>{{match_head}}</strong>{{tail}}\
+          <input type=\'hidden\' value=\'{{value}}\'>\
+        </option>");
+      var autocomplete = new AutoComplete(
+        document,
+        document.getElementById("sql_query_text"),
+        query_history_store.entries,
+        option_view_template);
+      document.querySelector("#sql_query_text")
+        .addEventListener("keydown", event => {
+          if (event.key == "Enter") {
+            event.preventDefault();
+            if (!autocomplete.any_active()) {
+              on_query_click();
+            }
           }
-        }
       });
     }
 
