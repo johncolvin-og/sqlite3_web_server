@@ -97,7 +97,8 @@ const canned_queries = {
     param5 as PNL,
     param6 as Qty,
     param7 as Clean,
-    param8 as Forced
+    param8 as Forced,
+    param9 as 'Dur ns'
     from log_entry where
       file='SniperAlgo.cpp' and param6>=0 and
       (param2='Buy' or param2='Sell')`,
@@ -110,7 +111,13 @@ const canned_queries = {
     param5 as 'N Fire',
     param6 as 'N Clean',
     param7 as 'N Force',
-    param8 as 'N Edge Pass'
+    param8 as 'N Edge Pass',
+    param9 as 'N Gate 1 Fail',
+    param10 as 'N Gate 2 Fail',
+    param11 as 'N Gate 3 Fail',
+    param12 as 'N Bk Upd',
+    param13 as 'Bk Proc Avg',
+    param14 as 'Bk Upd Rate'
     from log_entry where
       file='SniperAlgo.cpp' and
       (param2!='Buy' and param2!='Sell')`,
