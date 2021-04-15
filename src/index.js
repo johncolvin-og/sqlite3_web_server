@@ -82,8 +82,43 @@ function run_query(query, res) {
   run_sql_query(query, res);
 }
 
+function fmt_time_pretty(col_name) {
+  return `datetime(${col_name} / 1000000000, 'unixepoch')`;
+}
+
 // Canned queries (occurrences of the keys will be replaced with the values)
-const canned_queries = {};
+const canned_queries = {
+  shot_outcomes: `select
+    ${fmt_time_pretty('ts')} as Timestamp,
+    param3 as EID,
+    param1 as PID,
+    param2 as Side,
+    param4 as Price,
+    param5 as PNL,
+    param6 as Qty,
+    param7 as Clean,
+    param8 as Forced
+    from log_entry where
+      file='SniperAlgo.cpp' and param6>=0 and
+      (param2='Buy' or param2='Sell')`,
+  sniper_states: `select
+    ${fmt_time_pretty('ts')} as Timestamp,
+    param1 as Name,
+    param2 as 'N Polys',
+    param3 as State,
+    param4 as 'N Wkg',
+    param5 as 'N Fire',
+    param6 as 'N Clean',
+    param7 as 'N Force',
+    param8 as 'N Edge Pass'
+    from log_entry where
+      file='SniperAlgo.cpp' and
+      (param2!='Buy' and param2!='Sell')`,
+};
+
+const column_substitutions = {
+  ' ts': ` ${fmt_time_pretty('ts')} as Timestamp`,
+};
 
 app.get(`/sql_query=*`, (req, res) => {
   console.info(`Received request for ${req.url}`);
