@@ -100,8 +100,8 @@ const canned_queries = {
     param8 as Forced,
     param9 as 'Dur ns'
     from log_entry where
-      file='SniperAlgo.cpp' and param6>=0 and
-      (param2='Buy' or param2='Sell')`,
+      entry_type='shot_outcome
+      order by ts DESC'`,
   sniper_states: `select
     ${fmt_time_pretty('ts')} as Timestamp,
     param1 as Name,
@@ -119,12 +119,8 @@ const canned_queries = {
     param13 as 'Bk Proc Avg',
     param14 as 'Bk Upd Rate'
     from log_entry where
-      file='SniperAlgo.cpp' and
-      (param2!='Buy' and param2!='Sell')`,
-};
-
-const column_substitutions = {
-  ' ts': ` ${fmt_time_pretty('ts')} as Timestamp`,
+      entry_type='sniper_state'
+      order by ts DESC`,
 };
 
 app.get(`/sql_query=*`, (req, res) => {
