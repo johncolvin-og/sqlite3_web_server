@@ -30,7 +30,8 @@ class Sqlite3Client {
       }
       if (row_count != count) {
         console.error(
-          `Discrepancy in row counts: ${row_count} were evaluated, but 'count' in the sqlite callback is ${count}`
+          `Discrepancy in row counts: ${row_count} were evaluated, but 'count'
+          in the sqlite callback is ${count}`
         );
       }
       console.log(`Finished executing sql query (produced ${count} rows)`);
@@ -49,9 +50,9 @@ class Sqlite3Client {
       on_error
     );
 
-    console.info("Connecting to sqlite database...");
+    console.info('Connecting to sqlite database...');
     db.serialize(() => {
-      console.info("Connected to sqlite database");
+      console.info('Connected to sqlite database');
       db.each(query, _on_row, _on_complete);
     });
     db.close((err) => {
