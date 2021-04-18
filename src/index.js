@@ -13,6 +13,7 @@ import { readdirSync, createReadStream } from 'fs';
 import { get_file_ext } from './file_utils.js';
 import 'process';
 import { query_input_parser } from './services/services.js'
+import { SQL_QUERY_PARAM } from './search_params.js';
 
 function get_default_port() {
   return 0;
@@ -83,9 +84,9 @@ function run_query(query, res) {
   run_sql_query(query, res);
 }
 
-app.get(`/sql_query=*`, (req, res) => {
+app.get(`/${SQL_QUERY_PARAM}=*`, (req, res) => {
   console.info(`Received request for ${req.url}`);
-  let query_in = querystring.parse(req.url.substr(1))['sql_query'];
+  let query_in = querystring.parse(req.url.substr(1))[SQL_QUERY_PARAM];
   let query = query_input_parser.parse(query_in);
   run_query(query, res);
 });

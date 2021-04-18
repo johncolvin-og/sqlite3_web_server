@@ -11,16 +11,16 @@
     <script src="scripts/jquery-3.5.1.min.js"></script>
     <script>
     const query_history_key = "query_history";
-    const query_param = 'sql_query';
+    const SQL_QUERY_PARAM = 'sql-query';
 
     function get_query_from_url() {
       let query = decodeURIComponent(
         new URL(document.location)
         .searchParams
-        .get('sql_query'));
+        .get(SQL_QUERY_PARAM));
       // for some reason I cannot fathom, `searchParams.get` returns a literal
       // string "null" (rather than actual null) if there isn't an entry for
-      // sql_query in searchParams
+      // `SQL_QUERY_PARAM` in searchParams
       return query == "null" ? null : query;
     }
 
@@ -39,7 +39,7 @@
       console.info("query_text type " + typeof(query_text));
       console.info(`running req ${query_text}`);
       let req = new XMLHttpRequest();
-      req.open("GET", `${query_param}=${query_text}`);
+      req.open("GET", `${SQL_QUERY_PARAM}=${query_text}`);
       req.onreadystatechange = function () {
         console.log(`Received sql query results.  XMLHttpResponse readystate:
           ${this.readyState}, status: ${this.status}, statusText:
