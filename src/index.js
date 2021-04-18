@@ -12,6 +12,7 @@ import express from 'express';
 import { readdirSync, createReadStream } from 'fs';
 import { get_file_ext } from './file_utils.js';
 import 'process';
+import { query_input_parser } from './services/services.js'
 
 function get_default_port() {
   return 0;
@@ -82,54 +83,10 @@ function run_query(query, res) {
   run_sql_query(query, res);
 }
 
-function fmt_time_pretty(col_name) {
-  return `datetime(${col_name} / 1000000000, 'unixepoch')`;
-}
-
-// Canned queries (occurrences of the keys will be replaced with the values)
-const canned_queries = {
-  shot_outcomes: `select
-    ${fmt_time_pretty('ts')} as Timestamp,
-    param3 as EID,
-    param1 as PID,
-    param2 as Side,
-    param4 as Price,
-    param5 as PNL,
-    param6 as Qty,
-    param7 as Clean,
-    param8 as Forced,
-    param9 as 'Dur ns'
-    from log_entry where
-      entry_type='shot_outcome
-      order by ts DESC'`,
-  sniper_states: `select
-    ${fmt_time_pretty('ts')} as Timestamp,
-    param1 as Name,
-    param2 as Polys,
-    param3 as State,
-    param4 as Wkg,
-    param5 as Fire,
-    param6 as Clean,
-    param7 as Force,
-    param8 as 'Edge Pass',
-    param9 as 'Gate 1 Fail',
-    param10 as 'Gate 2 Fail',
-    param11 as 'Gate 3 Fail',
-    param12 as 'Bk Upd',
-    param13 as 'Bk Proc Avg',
-    param14 as 'Bk Upd Rate'
-    from log_entry where
-      entry_type='sniper_state'
-      order by ts DESC`,
-};
-
 app.get(`/sql_query=*`, (req, res) => {
   console.info(`Received request for ${req.url}`);
-  let query = querystring.parse(req.url.substr(1))['sql_query'];
-  for (let key of Object.keys(canned_queries)) {
-    // watch out for recursive replacement (unlike vim, there is no 'nnoremap')
-    query = query.replace(key, canned_queries[key]);
-  }
+  let query_in = querystring.parse(req.url.substr(1))['sql_query'];
+  let query = query_input_parser.parse(query_in);
   run_query(query, res);
 });
 
