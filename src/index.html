@@ -25,11 +25,11 @@
     }
 
     function get_query_from_input() {
-      return document.getElementById('sql_query_text').value;
+      return document.getElementById('sql-query-text').value;
     }
 
     function set_query_input(value) {
-      document.getElementById('sql_query_text').value = value;
+      document.getElementById('sql-query-text').value = value;
     }
 
     function run_sql_query(query_text = get_query_from_url()) {
@@ -44,7 +44,7 @@
         console.log(`Received sql query results.  XMLHttpResponse readystate:
           ${this.readyState}, status: ${this.status}, statusText:
           ${this.statusText}`);
-        document.getElementById("sql_output_table").innerHTML = this.responseText;
+        document.getElementById("sql-output-table").innerHTML = this.responseText;
       };
       req.send();
     }
@@ -62,10 +62,10 @@
     </script>
   </head>
   <body>
-    <form id="sql_input_panel">
+    <form id="sql-input-panel">
       <input
-        id="sql_query_text"
-        name="sql_query"
+        id="sql-query-text"
+        name="sql-query"
         placeholder="Enter SQL Query"
         maxlength="256"
         rows="1"
@@ -74,8 +74,8 @@
     </input>
     <input id="execute-query-bn" type="submit" value="Query">
   </form>
-  <section id="sql_output_panel">
-    <table id="sql_output_table" display="none"></table>
+  <section id="sql-output-panel">
+    <table id="sql-output-table" display="none"></table>
   </section>
 </body>
 </html>
