@@ -4,6 +4,21 @@ function fmt_time_pretty(col_name) {
   return `datetime(${col_name} / 1000000000, 'unixepoch')`;
 }
 
+// Each trading day begins at 9pm UTC (5pm ET)
+const TRADE_START_HOURS = 21;
+
+function get_trade_start_date() {
+  const trade_start = new Date();
+  if (trade_start.getUTCHours() <= TRADE_START_HOURS) {
+    trade_start.setDate(trade_start.getDate() - 1);
+  }
+  trade_start.setHours(17);
+  trade_start.setMinutes(0);
+  trade_start.setSeconds(0);
+  trade_start.setMilliseconds(0);
+  return trade_start.toISOString();
+}
+
 const canned_queries = {
   shot_outcomes: () => `select
     ${fmt_time_pretty('ts')} as Timestamp,
@@ -46,6 +61,7 @@ canned_queries['sniper_states'] = () =>
 canned_queries['sniper_state'] = () =>
   `${canned_queries['all_sniper_states']()} limit 1`;
 
-canned_queries[
-  'sniper_state'
-] = () => `${canned_queries['all_sniper_states']()} limit 1`;
+canned_queries['day_shot_outcomes'] = () =>
+  `select * from (${canned_queries[
+    'shot_outcomes'
+  ]()}) where Timestamp>'${get_trade_start_date()}'`;
