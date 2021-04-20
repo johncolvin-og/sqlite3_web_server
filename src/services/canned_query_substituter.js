@@ -17,7 +17,7 @@ export class CannedQuerySubstitutor extends IQueryInputParser {
   parse(query) {
     for (let key of Object.keys(this.substitutions)) {
       let regex = new RegExp(`\\b(${key})(?<!')(?!')\\b`);
-      query = query.replace(regex, this.substitutions[key]);
+      query = query.replace(regex, this.substitutions[key]());
     }
     return query;
   }
