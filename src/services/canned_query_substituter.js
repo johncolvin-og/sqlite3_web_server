@@ -10,7 +10,6 @@ import { IQueryInputParser } from './iquery_input_parser.js';
  */
 export class CannedQuerySubstitutor extends IQueryInputParser {
   constructor() {
-    console.info("I am being created");
     super();
     this.substitutions = canned_queries;
   }
